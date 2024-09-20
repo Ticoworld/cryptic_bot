@@ -201,7 +201,7 @@ bot.onText(/\/invite/, async (msg) => {
     }
 
     // Generate a referral link
-    const referralLink = `https://t.me/Testing_afain_bot?start=${referralCode}`;
+    const referralLink = `https://t.me/socra_tes_bot?start=${referralCode}`;
 
     bot.sendMessage(msg.chat.id, `Here is your referral link: ${referralLink}`);
   } catch (err) {
@@ -302,9 +302,8 @@ bot.onText(/\/all_users/, async (msg) => {
           `<b>Wallet Address:</b> <code>${
             user.walletAddress || "Not provided"
           }</code>\n` +
-          `<b>Referrals:</b> ${referralCount}\n` +
-          `<b>Proof File URL:</b> ${user.proofFileUrl || "Not provided"}\n\n`;
-      } catch (err) {
+          `<b>Referrals:</b> ${referralCount}\n` ;
+        } catch (err) {
         console.error(
           `Error fetching Telegram details for user ${user.userId}:`,
           err
@@ -318,15 +317,14 @@ bot.onText(/\/all_users/, async (msg) => {
           `<b>Wallet Address:</b> <code>${
             user.walletAddress || "Not provided"
           }</code>\n` +
-          `<b>Referrals:</b> ${referralCount}\n` +
-          `<b>Proof File URL:</b> ${user.proofFileUrl || "Not provided"}\n\n`;
+          `<b>Referrals:</b> ${referralCount}\n` ;
       }
     }
 
     // Send the formatted message with HTML parse mode
     bot.sendMessage(chatId, response, { parse_mode: "HTML" });
   } catch (err) {
-    console.error(err);
+    console.error(err); 
     bot.sendMessage(chatId, "An error occurred while retrieving users.");
   }
 });
