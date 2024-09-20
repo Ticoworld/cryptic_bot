@@ -686,9 +686,3 @@ bot.on("message", async (msg) => {
 module.exports = (req, res) => {
   return app(req, res);
 };
-
-
-// Export the app for serverless function
-module.exports = (req, res) => {
-  return app(req, res);
-};
