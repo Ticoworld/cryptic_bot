@@ -23,8 +23,8 @@ const User = require("./model/user.model");
 app.use(express.json());
 app.use(bodyParser.json());
 
-// const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+// const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
 
 let userData = {};
 let registeredUsers = new Set();
@@ -526,48 +526,88 @@ bot.onText(/\/help/, async (msg) => {
 });
 
 // Bot command to make another user an admin
-bot.onText(/\/makeadmin (\d+)/, async (msg, match) => {
+// Store user states globally
+const userStates = {};
+
+// Step 1: Handle /makeadmin command
+bot.onText(/\/makeadmin/, async (msg) => {
   const requesterId = msg.from.id; // The user who issued the command
-  const targetUserId = match[1]; // The userId of the person to be made admin
 
   try {
-    // Step 1: Check if the requester is an admin
+    // Check if the requester is an admin
     const requestingUser = await User.findOne({ userId: requesterId });
 
     if (!requestingUser || !requestingUser.isAdmin) {
       return bot.sendMessage(
-        requesterId,
+        msg.chat.id,
         "You do not have permission to make another user an admin."
       );
     }
 
-    // Step 2: Update the target user to be an admin
-    const result = await User.updateOne(
-      { userId: targetUserId },
-      { isAdmin: true }
+    // Ask the requester for the user ID to make admin
+    bot.sendMessage(
+      msg.chat.id,
+      "Please enter the ID of the user you want to make an admin."
     );
 
-    if (result.modifiedCount > 0) {
-      bot.sendMessage(
-        requesterId,
-        `User ${targetUserId} has been made an admin.`
-      );
-      bot.sendMessage(targetUserId, `You have been promoted to admin!`);
-    } else {
-      bot.sendMessage(
-        requesterId,
-        `User ${targetUserId} not found or is already an admin.`
-      );
-    }
+    // Store the state for the requester
+    userStates[requesterId] = { waitingForUserId: true };
+
   } catch (err) {
-    console.error("Error updating user:", err);
+    console.error("Error checking admin status:", err);
     bot.sendMessage(
-      requesterId,
-      "An error occurred while trying to make the user an admin."
+      msg.chat.id,
+      "An error occurred while checking your admin status."
     );
   }
 });
 
+// Step 2: Handle text responses after /makeadmin is invoked
+bot.on("message", async (msg) => {
+  const requesterId = msg.from.id;
+
+  // Check if we're waiting for a user ID from this requester
+  if (userStates[requesterId] && userStates[requesterId].waitingForUserId) {
+    const targetUserId = msg.text; // The user ID the requester provided
+
+    try {
+      // Find the target user and make them an admin
+      const updatedUser = await User.findOneAndUpdate(
+        { userId: targetUserId },
+        { isAdmin: true },
+        { new: true } // Return the updated document
+      );
+
+      if (updatedUser) {
+        bot.sendMessage(
+          msg.chat.id,
+          `User ${updatedUser.name || targetUserId} has been promoted to admin.`
+        );
+        bot.sendMessage(
+          targetUserId,
+          `You have been promoted to admin by @${msg.from.username || 'Admin'}.`
+        );
+      } else {
+        bot.sendMessage(
+          msg.chat.id,
+          `User with ID ${targetUserId} not found or could not be updated.`
+        );
+      }
+
+    } catch (err) {
+      console.error("Error making user admin:", err);
+      bot.sendMessage(
+        msg.chat.id,
+        "An error occurred while trying to promote the user to admin."
+      );
+    }
+
+    // Clear the state after processing the request
+    delete userStates[requesterId];
+  }
+});
+
+// Export the app for serverless function
 module.exports = (req, res) => {
   return app(req, res);
 };

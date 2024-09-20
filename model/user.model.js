@@ -27,38 +27,3 @@ module.exports = mongoose.model('User', userSchema);
 
 
 
-//   const userId = msg.from.id;
-//   const referrerCode = match[1];
-
-//   // Check if the user is already registered
-//   if (!registeredUsers.has(userId)) {
-//     return bot.sendMessage(
-//       msg.chat.id,
-//       "You need to complete your registration before you can provide a referrer."
-//     );
-//   }
-
-//   // Check if referrer exists
-//   const referrer = await User.findOne({ referralCode: referrerCode });
-
-//   if (!referrer) {
-//     return bot.sendMessage(
-//       msg.chat.id,
-//       "Invalid referral code. Please check and try again." 
-//     );
-//   }
-
-//   // Save referrer ID
-//   userData[userId] = userData[userId] || {};
-//   userData[userId].referrer = referrer.userId;
-
-//   // Update referrer's referredUsers list
-//   await User.findByIdAndUpdate(referrer._id, {
-//     $push: { referredUsers: userId }
-//   });
-
-//   bot.sendMessage(
-//     msg.chat.id,
-//     `You have been referred by user with referral code: ${referrerCode}`
-//   );
-// });
