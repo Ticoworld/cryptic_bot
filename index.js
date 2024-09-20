@@ -450,7 +450,8 @@ bot.onText(/\/leaderboard/, async (msg) => {
 const adminCommands = `
 /admin - List available admin commands
 /all_users - List all registered users
-/makeadmin - List all registered users
+/makeadmin - promote an admin
+/removeadmin - remove an admin
 /users_wallets - List all registered contestants
 /leaderboard - Show the leaderboard
 /help - Show help information
@@ -606,6 +607,86 @@ bot.on("message", async (msg) => {
     delete userStates[requesterId];
   }
 });
+
+// Step 1: Handle /removeadmin command
+bot.onText(/\/removeadmin/, async (msg) => {
+  const requesterId = msg.from.id; // The user who issued the command
+
+  try {
+    // Check if the requester is an admin
+    const requestingUser = await User.findOne({ userId: requesterId });
+
+    if (!requestingUser || !requestingUser.isAdmin) {
+      return bot.sendMessage(
+        msg.chat.id,
+        "You do not have permission to remove another admin."
+      );
+    }
+
+    // Ask the requester for the user ID to remove admin rights
+    bot.sendMessage(
+      msg.chat.id,
+      "Please enter the ID of the user you want to remove from admin."
+    );
+
+    // Store the state for the requester
+    userStates[requesterId] = { waitingForUserIdToRemove: true };
+
+  } catch (err) {
+    console.error("Error checking admin status:", err);
+    bot.sendMessage(
+      msg.chat.id,
+      "An error occurred while checking your admin status."
+    );
+  }
+});
+
+// Step 2: Handle text responses after /removeadmin is invoked
+bot.on("message", async (msg) => {
+  const requesterId = msg.from.id;
+
+  // Check if we're waiting for a user ID to remove admin from this requester
+  if (userStates[requesterId] && userStates[requesterId].waitingForUserIdToRemove) {
+    const targetUserId = msg.text; // The user ID the requester provided
+
+    try {
+      // Find the target user and remove their admin status
+      const updatedUser = await User.findOneAndUpdate(
+        { userId: targetUserId },
+        { isAdmin: false },
+        { new: true } // Return the updated document
+      );
+
+      if (updatedUser) {
+        bot.sendMessage(
+          msg.chat.id,
+          `User ${updatedUser.name || targetUserId} has been removed from admin status.`
+        );
+      } else {
+        bot.sendMessage(
+          msg.chat.id,
+          `User with ID ${targetUserId} not found or could not be updated.`
+        );
+      }
+
+    } catch (err) {
+      console.error("Error removing admin status:", err);
+      bot.sendMessage(
+        msg.chat.id,
+        "An error occurred while trying to remove the user's admin status."
+      );
+    }
+
+    // Clear the state after processing the request
+    delete userStates[requesterId];
+  }
+});
+
+// Export the app for serverless function
+module.exports = (req, res) => {
+  return app(req, res);
+};
+
 
 // Export the app for serverless function
 module.exports = (req, res) => {
