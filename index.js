@@ -18,7 +18,7 @@ mongoose
     console.error("MongoDB connection error:", err);
   });
 
-const User = require("./model/user.model");
+const User = require("./model/user.model"); 
 
 app.use(express.json());
 app.use(bodyParser.json());
