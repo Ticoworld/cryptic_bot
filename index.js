@@ -159,8 +159,12 @@ bot.on("message", async (msg) => {
 
       bot.sendMessage(
         msg.chat.id,
-        `Here is your invite link to join the group: https://t.me/+Kpfa4X6iLTZiOWE0
-        Join the Channel also through this link: https://t.me/SocratesNigeriaStudents 
+        `Here is your invite link to join the group:
+        GROUP LINK
+        https://t.me/+Kpfa4X6iLTZiOWE0
+        Join the Channel also through this link: 
+        CHANNEL LINK
+        https://t.me/SocratesNigeriaStudents 
         `
       );
 
@@ -201,7 +205,7 @@ bot.onText(/\/invite/, async (msg) => {
     }
 
     // Generate a referral link
-    const referralLink = `https://t.me/Testing_afain_bot?start=${referralCode}`;
+    const referralLink = `https://t.me/socra_tes_bot?start=${referralCode}`;
 
     bot.sendMessage(msg.chat.id, `Here is your referral link: ${referralLink}`);
   } catch (err) {
