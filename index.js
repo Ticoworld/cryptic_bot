@@ -33,13 +33,10 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-
 app.post("/webhook", (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
-
-
 
 bot.onText(/\/start(?:\s+([\w-]+))?/, async (msg, match) => {
   const userId = msg.from.id;
@@ -87,8 +84,6 @@ bot.on("message", async (msg) => {
   if (!userData[userId]) {
     return;
   }
-
-
 
   if (!userData[userId].name) {
     userData[userId].name = text;
@@ -159,13 +154,13 @@ bot.on("message", async (msg) => {
 
       bot.sendMessage(
         msg.chat.id,
-        `Here is your invite link to join the group:
-        GROUP LINK
-        https://t.me/+Kpfa4X6iLTZiOWE0
-        Join the Channel also through this link: 
-        CHANNEL LINK
-        https://t.me/SocratesNigeriaStudents 
-        `
+        `Here is your invite link to join the group:\n
+        <b>GROUP LINK</b>\n
+        https://t.me/+Kpfa4X6iLTZiOWE0\n\n
+        Join the Channel also through this link:\n
+        <b>CHANNEL LINK</b>\n
+        https://t.me/SocratesNigeriaStudents`,
+        { parse_mode: "HTML" }
       );
 
       delete userData[userId];
@@ -284,7 +279,7 @@ bot.onText(/\/all_users/, async (msg) => {
     }
 
     // Display users' information in a message with HTML formatting
-    let response = "List of all registered users:\n\n";
+    let response = `List of all registered users (${allUsers.length} users):\n\n`;
 
     // Iterate over users and fetch their Telegram details
     for (const [index, user] of allUsers.entries()) {
@@ -306,8 +301,8 @@ bot.onText(/\/all_users/, async (msg) => {
           `<b>Wallet Address:</b> <code>${
             user.walletAddress || "Not provided"
           }</code>\n` +
-          `<b>Referrals:</b> ${referralCount}\n` ;
-        } catch (err) {
+          `<b>Referrals:</b> ${referralCount}\n`;
+      } catch (err) {
         console.error(
           `Error fetching Telegram details for user ${user.userId}:`,
           err
@@ -321,14 +316,14 @@ bot.onText(/\/all_users/, async (msg) => {
           `<b>Wallet Address:</b> <code>${
             user.walletAddress || "Not provided"
           }</code>\n` +
-          `<b>Referrals:</b> ${referralCount}\n` ;
+          `<b>Referrals:</b> ${referralCount}\n`;
       }
     }
 
     // Send the formatted message with HTML parse mode
     bot.sendMessage(chatId, response, { parse_mode: "HTML" });
   } catch (err) {
-    console.error(err); 
+    console.error(err);
     bot.sendMessage(chatId, "An error occurred while retrieving users.");
   }
 });
@@ -455,6 +450,7 @@ bot.onText(/\/leaderboard/, async (msg) => {
 const adminCommands = `
 /admin - List available admin commands
 /all_users - List all registered users
+/makeadmin - List all registered users
 /users_wallets - List all registered contestants
 /leaderboard - Show the leaderboard
 /help - Show help information
@@ -525,6 +521,49 @@ bot.onText(/\/help/, async (msg) => {
     bot.sendMessage(
       chatId,
       "An error occurred while displaying the help message."
+    );
+  }
+});
+
+// Bot command to make another user an admin
+bot.onText(/\/makeadmin (\d+)/, async (msg, match) => {
+  const requesterId = msg.from.id; // The user who issued the command
+  const targetUserId = match[1]; // The userId of the person to be made admin
+
+  try {
+    // Step 1: Check if the requester is an admin
+    const requestingUser = await User.findOne({ userId: requesterId });
+
+    if (!requestingUser || !requestingUser.isAdmin) {
+      return bot.sendMessage(
+        requesterId,
+        "You do not have permission to make another user an admin."
+      );
+    }
+
+    // Step 2: Update the target user to be an admin
+    const result = await User.updateOne(
+      { userId: targetUserId },
+      { isAdmin: true }
+    );
+
+    if (result.modifiedCount > 0) {
+      bot.sendMessage(
+        requesterId,
+        `User ${targetUserId} has been made an admin.`
+      );
+      bot.sendMessage(targetUserId, `You have been promoted to admin!`);
+    } else {
+      bot.sendMessage(
+        requesterId,
+        `User ${targetUserId} not found or is already an admin.`
+      );
+    }
+  } catch (err) {
+    console.error("Error updating user:", err);
+    bot.sendMessage(
+      requesterId,
+      "An error occurred while trying to make the user an admin."
     );
   }
 });
