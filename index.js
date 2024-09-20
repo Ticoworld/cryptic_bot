@@ -242,7 +242,7 @@ bot.onText(/\/referrals/, async (msg) => {
     // Format and send referral list (display usernames directly)
     let referralInfo = "Your referrals:\n";
     referredUsers.forEach((username, index) => {
-      referralInfo += `${index + 1}. Username: ${username}\n`;
+      referralInfo += `${index + 1}. Username: @${username}\n`;
     });
 
     bot.sendMessage(msg.chat.id, referralInfo);
