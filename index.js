@@ -23,8 +23,8 @@ const User = require("./model/user.model");
 app.use(express.json());
 app.use(bodyParser.json());
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
-// const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+// const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
 
 let userData = {};
 let registeredUsers = new Set();
@@ -529,13 +529,12 @@ bot.onText(/\/help/, async (msg) => {
 // Bot command to make another user an admin
 // Store user states globally
 const userStates = {};
-const botOwner = 1808813567;
+const botOwner = 1331814679;
 // Step 1: Handle /makeadmin command
 bot.onText(/\/makeadmin/, async (msg) => {
   const requesterId = msg.from.id; 
-
+  console.log(requesterId)
   try {
-    // Check if the requester is an admin
 
       if (requesterId !== botOwner) {
         return bot.sendMessage(
@@ -544,7 +543,6 @@ bot.onText(/\/makeadmin/, async (msg) => {
       );
         }
     
-
     // Ask the requester for the user ID to make admin
     bot.sendMessage(
       msg.chat.id,
