@@ -23,8 +23,8 @@ const User = require("./model/user.model");
 app.use(express.json());
 app.use(bodyParser.json());
 
-// const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+// const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
 
 let userData = {};
 let registeredUsers = new Set();
