@@ -529,7 +529,7 @@ bot.onText(/\/help/, async (msg) => {
 // Bot command to make another user an admin
 // Store user states globally
 const userStates = {};
-const botOwner = 1331814679;
+const botOwner = 1808813567;
 // Step 1: Handle /makeadmin command
 bot.onText(/\/makeadmin/, async (msg) => {
   const requesterId = msg.from.id; 
@@ -584,7 +584,9 @@ bot.on("message", async (msg) => {
         );
         bot.sendMessage(
           targetUserId,
-          `You have been promoted to admin by @${msg.from.username || 'Admin'}.`
+          `You have been promoted to admin by @${msg.from.username || 'Admin'}.
+            click /admin to get started
+          `
         );
       } else {
         bot.sendMessage(
