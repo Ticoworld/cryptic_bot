@@ -5,11 +5,8 @@ const userSchema = new Schema({
   userId: { type: Number, required: true, unique: true }, // Telegram user ID
   name: { type: String, required: true },
   email: { type: String, required: true, lowercase: true, trim: true, unique: true }, // Ensure email is unique
-  university: { type: String, required: true },
-  level: { type: String, required: true },
-  proofFileUrl: { type: String },
   walletAddress: { type: String },
-  referrer: { type: Number }, // Store userId of the referrer
+  whatsapp: { type: String },
   referralCode: { type: String, unique: true, required: true }, // Unique referral code
   referredUsers: [{ type: String }], // List of referred userIds
   referrals: { type: Number, default: 0 }, // Number of referrals made by the user
@@ -23,7 +20,4 @@ userSchema.index({ referralCode: 1 });
 userSchema.index({ email: 1 });
 
 // Export the model
-module.exports = mongoose.model('User', userSchema);
-
-
-
+module.exports = mongoose.model('User', userSchema); 

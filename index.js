@@ -97,18 +97,6 @@ bot.on("message", async (msg) => {
     }
   } else if (!userData[userId].whatsapp) {
     userData[userId].whatsapp = text;
-    bot.sendMessage(msg.chat.id, "Which university do you attend?");
-  } else if (!userData[userId].university) {
-    userData[userId].university = text;
-    bot.sendMessage(
-      msg.chat.id,
-      "What is your current level of study (e.g., 100, 200, etc.)?"
-    );
-  } else if (!userData[userId].level) {
-    userData[userId].level = text;
-    bot.sendMessage(msg.chat.id, "What is your course of study?");
-  } else if (!userData[userId].course) {
-    userData[userId].course = text;
     bot.sendMessage(msg.chat.id, "Share your BEP20 wallet address.");
   } else if (!userData[userId].walletAddress) {
     userData[userId].walletAddress = text;
@@ -118,9 +106,6 @@ bot.on("message", async (msg) => {
       name: userData[userId].name,
       email: userData[userId].email,
       whatsapp: userData[userId].whatsapp,
-      university: userData[userId].university,
-      level: userData[userId].level,
-      course: userData[userId].course,
       walletAddress: userData[userId].walletAddress,
       referralCode: userData[userId].referralCode,
     });
@@ -157,9 +142,9 @@ bot.on("message", async (msg) => {
         `Here is your invite link to join the group:\n
         <b>GROUP LINK</b>\n
         https://t.me/+Kpfa4X6iLTZiOWE0\n\n
-        Join the Channel also through this link:\n
+        Join the Channel through this link:\n
         <b>CHANNEL LINK</b>\n
-        https://t.me/SocratesNigeriaStudents`,
+        https://t.me/SocratesNigeria`,
         { parse_mode: "HTML" }
       );
 
@@ -167,7 +152,7 @@ bot.on("message", async (msg) => {
     } catch (err) {
       bot.sendMessage(
         msg.chat.id,
-        "An error occurred while saving your data. Please try again."
+        "An error occurred while saving your data. Please try again. /start"
       );
     }
   }
@@ -296,8 +281,7 @@ bot.onText(/\/all_users/, async (msg) => {
           `${index + 1}. ${user.name} (@${username})\n` +
           `<b>Name:</b> ${user.name || "Not provided"}\n` +
           `<b>Email:</b> ${user.email || "Not provided"}\n` +
-          `<b>University:</b> ${user.university || "Not provided"}\n` +
-          `<b>Level:</b> ${user.level || "Not provided"}\n` +
+          `<b>whatsapp:</b> <code>${user.whatsapp || "Not provided"}</code> \n` +
           `<b>Wallet Address:</b> <code>${
             user.walletAddress || "Not provided"
           }</code>\n` +
@@ -311,8 +295,7 @@ bot.onText(/\/all_users/, async (msg) => {
           `${index + 1}. ${user.name} (@Unknown)\n` +
           `<b>Name:</b> ${user.name || "Not provided"}\n` +
           `<b>Email:</b> ${user.email || "Not provided"}\n` +
-          `<b>University:</b> ${user.university || "Not provided"}\n` +
-          `<b>Level:</b> ${user.level || "Not provided"}\n` +
+          `<b>whatsapp:</b> <code>${user.whatsapp || "Not provided"}</code> \n` +
           `<b>Wallet Address:</b> <code>${
             user.walletAddress || "Not provided"
           }</code>\n` +
@@ -451,6 +434,7 @@ const adminCommands = `
 /admin - List available admin commands
 /all_users - List all registered users
 /makeadmin - promote an admin
+/alladmins - list of all admins
 /removeadmin - remove an admin
 /users_wallets - List all registered contestants
 /leaderboard - Show the leaderboard
@@ -531,6 +515,7 @@ bot.onText(/\/help/, async (msg) => {
 const userStates = {};
 const botOwner = 1808813567;
 // Step 1: Handle /makeadmin command
+
 bot.onText(/\/makeadmin/, async (msg) => {
   const requesterId = msg.from.id; 
   console.log(requesterId)
@@ -681,6 +666,57 @@ bot.on("message", async (msg) => {
     delete userStates[requesterId];
   }
 });
+
+// Step 1: Handle /alladmins command
+bot.onText(/\/alladmins/, async (msg) => {
+  const requesterId = msg.from.id;
+
+  // Check if the requester is the botOwner
+  if (requesterId !== botOwner) {
+    return bot.sendMessage(
+      msg.chat.id,
+      "You do not have permission to view the admin list."
+    );
+  }
+
+  try {
+    // Find all users who are admins
+    const adminUsers = await User.find({ isAdmin: true });
+
+    if (adminUsers.length === 0) {
+      bot.sendMessage(msg.chat.id, "No admins found.");
+    } else {
+      let adminList = "List of Admins:\n";
+      
+      // Loop through each admin user to get their username via Telegram API
+      for (const admin of adminUsers) {
+        const userId = admin.userId;
+
+        try {
+          // Fetch the user details using Telegram's getChat method
+          const userInfo = await bot.getChat(userId);
+
+          // Add the admin details to the list with formatted userId
+          adminList += `ID: <code>${userId}</code>, Username: @${userInfo.username || 'No username'}\n`;
+        } catch (err) {
+          console.error(`Error fetching username for user ${userId}:`, err);
+          adminList += `ID: <code>${userId}</code>, Username: Not found\n`;
+        }
+      }
+
+      // Send the list of admins with HTML parsing mode
+      bot.sendMessage(msg.chat.id, adminList, { parse_mode: "HTML" });
+    }
+
+  } catch (err) {
+    console.error("Error fetching admin list:", err);
+    bot.sendMessage(
+      msg.chat.id,
+      "An error occurred while fetching the admin list."
+    );
+  }
+});
+
 
 // Export the app for serverless function
 module.exports = (req, res) => {
