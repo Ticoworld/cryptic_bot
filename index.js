@@ -598,26 +598,24 @@ bot.onText(/\/removeadmin/, async (msg) => {
   const requesterId = msg.from.id; // The user who issued the command
 
   try {
-    // Check if the requester is an admin
-    const requestingUser = await User.findOne({ userId: requesterId });
 
-    if (!requestingUser || !requestingUser.isAdmin) {
+    if (requesterId !== botOwner) {
       return bot.sendMessage(
-        msg.chat.id,
-        "You do not have permission to remove another admin."
-      );
-    }
-
-    // Ask the requester for the user ID to remove admin rights
-    bot.sendMessage(
       msg.chat.id,
-      "Please enter the ID of the user you want to remove from admin."
+      "You do not have permission to make another user an admin."
     );
+      }
+  
+  // Ask the requester for the user ID to make admin
+  bot.sendMessage(
+    msg.chat.id,
+    "Please enter the ID of the user you want to make an admin."
+  );
 
-    // Store the state for the requester
-    userStates[requesterId] = { waitingForUserIdToRemove: true };
+  // Store the state for the requester
+  userStates[requesterId] = { waitingForUserId: true };
 
-  } catch (err) {
+} catch (err) {
     console.error("Error checking admin status:", err);
     bot.sendMessage(
       msg.chat.id,
