@@ -375,59 +375,128 @@ bot.onText(/\/users_wallet/, async (msg) => {
   }
 });
 
+// bot.onText(/\/leaderboard/, async (msg) => {
+//   const userId = msg.from.id;
+//   const chatId = msg.chat.id;
+
+//   try {
+//     // Fetch the user to check if they are authorized to use the command
+//     const user = await User.findOne({ userId });
+
+//     if (!user || !user.isAdmin) {
+//       return bot.sendMessage(
+//         chatId,
+//         "You do not have permission to use this command."
+//       );
+//     }
+
+//     // Retrieve all users from MongoDB and sort by number of referrals in descending order
+//     const allUsers = await User.find().sort({ referrals: -1 });
+
+//     if (allUsers.length === 0) {
+//       return bot.sendMessage(chatId, "No users found in the database.");
+//     }
+
+//     // Display users' information in a message with HTML formatting
+//     let response = "<b>Referral Leaderboard:</b>\n\n";
+
+//     // Iterate over sorted users and create a response
+//     for (const [index, user] of allUsers.entries()) {
+//       // Fetch user details from Telegram using the userId
+//       try {
+//         const chat = await bot.getChat(user.userId);
+//         const username = chat.username || "Not provided";
+
+//         response +=
+//           `${index + 1}. ${user.name} (@${username})\n` +
+//           `<b>Referrals:</b> ${user.referrals || 0}\n`;
+//       } catch (err) {
+//         console.error(`Failed to get details for user ${user.userId}:`, err);
+//         response +=
+//           `${index + 1}. ${user.name}\n` +
+//           `<b>Referrals:</b> ${user.referrals || 0}\n`;
+//       }
+//     }
+
+//     // Send the formatted message with HTML parse mode
+//     bot.sendMessage(chatId, response, { parse_mode: "HTML" });
+//   } catch (err) {
+//     console.error(err);
+//     bot.sendMessage(
+//       chatId,
+//       "An error occurred while retrieving the leaderboard."
+//     );
+//   }
+// });
+
 bot.onText(/\/leaderboard/, async (msg) => {
   const userId = msg.from.id;
   const chatId = msg.chat.id;
 
   try {
-    // Fetch the user to check if they are authorized to use the command
-    const user = await User.findOne({ userId });
+      const user = await User.findOne({ userId });
+      console.log(`Message received from ${userId}`);
 
-    if (!user || !user.isAdmin) {
-      return bot.sendMessage(
-        chatId,
-        "You do not have permission to use this command."
-      );
-    }
-
-    // Retrieve all users from MongoDB and sort by number of referrals in descending order
-    const allUsers = await User.find().sort({ referrals: -1 });
-
-    if (allUsers.length === 0) {
-      return bot.sendMessage(chatId, "No users found in the database.");
-    }
-
-    // Display users' information in a message with HTML formatting
-    let response = "<b>Referral Leaderboard:</b>\n\n";
-
-    // Iterate over sorted users and create a response
-    for (const [index, user] of allUsers.entries()) {
-      // Fetch user details from Telegram using the userId
-      try {
-        const chat = await bot.getChat(user.userId);
-        const username = chat.username || "Not provided";
-
-        response +=
-          `${index + 1}. ${user.name} (@${username})\n` +
-          `<b>Referrals:</b> ${user.referrals || 0}\n`;
-      } catch (err) {
-        console.error(`Failed to get details for user ${user.userId}:`, err);
-        response +=
-          `${index + 1}. ${user.name}\n` +
-          `<b>Referrals:</b> ${user.referrals || 0}\n`;
+      if (!user || !user.isAdmin) {
+          console.log(`User ${userId} is not authorized.`);
+          return bot.sendMessage(chatId, "You do not have permission to use this command.");
       }
-    }
 
-    // Send the formatted message with HTML parse mode
-    bot.sendMessage(chatId, response, { parse_mode: "HTML" });
+      // Prompt the user to enter the number of users they want to retrieve
+      bot.sendMessage(chatId, "Please enter the number of users you want to retrieve (max 100):");
+
+      // Set up a listener for the user's response
+      bot.on('message', async (response) => {
+          // Ensure the response is from the same chat
+          if (response.chat.id !== chatId) return;
+
+          const numberOfUsers = parseInt(response.text, 10);
+
+          // Validate the input
+          if (isNaN(numberOfUsers) || numberOfUsers <= 0) {
+              return bot.sendMessage(chatId, "Please enter a valid number greater than 0.");
+          }
+
+          if (numberOfUsers > 100) {
+              return bot.sendMessage(chatId, "The number is too high. Please enter a number up to 100.");
+          }
+
+          // Retrieve the top N users sorted by referrals
+          const allUsers = await User.find().sort({ referrals: -1 }).limit(numberOfUsers);
+          console.log(`Retrieved ${allUsers.length} users from the database.`);
+
+          if (allUsers.length === 0) {
+              return bot.sendMessage(chatId, "No users found in the database.");
+          }
+
+          // Display users' information in a message with HTML formatting
+          let responseMessage = "<b>Referral Leaderboard:</b>\n\n";
+
+          for (const [index, user] of allUsers.entries()) {
+              try {
+                  const chat = await bot.getChat(user.userId);
+                  const username = chat.username || "Not provided";
+
+                  responseMessage +=
+                      `${index + 1}. @${username} - <b>Ref:</b> ${user.referrals || 0}\n`;
+              } catch (err) {
+                  console.error(`Failed to get details for user ${user.userId}:`, err);
+                  responseMessage +=
+                      `${index + 1}. ${user.name}\n` +
+                      `<b>Referrals:</b> ${user.referrals || 0}\n`;
+              }
+          }
+
+          // Send the formatted message with HTML parse mode
+          await bot.sendMessage(chatId, responseMessage, { parse_mode: "HTML" });
+      });
   } catch (err) {
-    console.error(err);
-    bot.sendMessage(
-      chatId,
-      "An error occurred while retrieving the leaderboard."
-    );
+      console.error("Error in /leaderboard command:", err);
+      bot.sendMessage(chatId, "An error occurred while retrieving the leaderboard.");
   }
 });
+
+
 
 // Define admin commands list
 const adminCommands = `
